@@ -10,9 +10,6 @@ namespace fenixjobs_api.Domain.Documents
         [BsonIgnoreIfDefault]
         public string Id { get; set; }
 
-        [BsonElement("IdProfession")]
-        public string IdProfession { get; set; }
-
         [BsonElement("Title")]
         public string Title { get; set; }
 
