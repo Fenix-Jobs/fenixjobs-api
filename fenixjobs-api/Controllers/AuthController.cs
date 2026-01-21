@@ -27,5 +27,18 @@ namespace fenixjobs_api.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            var response = await _authService.LoginAsync(dto);
+
+            if (!response.Status)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

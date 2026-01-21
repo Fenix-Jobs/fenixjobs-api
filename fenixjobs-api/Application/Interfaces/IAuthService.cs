@@ -7,5 +7,7 @@ namespace fenixjobs_api.Application.Interfaces
     public interface IAuthService
     {
         Task<ServiceResponseDto<Users>> RegisterAsync(RegisterDto dto);
+
+        Task<ServiceResponseDto<string>> LoginAsync(LoginDto dto);
     }
 }

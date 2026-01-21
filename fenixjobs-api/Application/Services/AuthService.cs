@@ -96,5 +96,64 @@ namespace fenixjobs_api.Application.Services
 
             return response;
         }
+
+        public async Task<ServiceResponseDto<string>> LoginAsync(LoginDto dto) 
+        {
+            var response = new ServiceResponseDto<string>();
+
+            var user = await _repository.GetByEmailAsync(dto.Email);
+            if (user == null)
+            {
+                response.Status = false;
+                response.Message = "Usuario no encontrado.";
+                return response;
+            }
+
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+
+            if (!isPasswordValid)
+            {
+                response.Status = false;
+                response.Message = "Contraseña incorrecta.";
+                return response;
+            }
+
+            response.Data = CreateToken(user);
+            response.Status = true;
+            response.Message = "Login exitoso.";
+
+            return response;
+        }
+
+        private string CreateToken(Users user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            if (!string.IsNullOrEmpty(user.IdProfession))
+            {
+                claims.Add(new Claim("ProfessionId", user.IdProfession));
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Jwt:Key").Value!));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = creds
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
     }
 }
