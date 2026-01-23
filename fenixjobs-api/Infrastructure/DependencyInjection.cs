@@ -34,6 +34,7 @@ namespace fenixjobs_api.Infrastructure
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ISystemLogRepository, SystemLogRepository>();
 
             return services;
         }
