@@ -15,12 +15,14 @@ namespace fenixjobs_api.Application.Services
         private readonly IUserRepository _repository;
         private readonly IConfiguration _configuration;
         private readonly FenixMongoContext _mongoContext;
+        private readonly ISystemLogRepository _logRepository;
 
-        public AuthService(IUserRepository repository, IConfiguration configuration, FenixMongoContext mongoContext)
+        public AuthService(IUserRepository repository, IConfiguration configuration, FenixMongoContext mongoContext, ISystemLogRepository logRepository)
         {
             _repository = repository;
             _configuration = configuration;
             _mongoContext = mongoContext;
+            _logRepository = logRepository;
         }
 
         public async Task<ServiceResponseDto<Users>> RegisterAsync(RegisterDto dto)
@@ -94,6 +96,16 @@ namespace fenixjobs_api.Application.Services
             response.Message = "Usuario registrado exitosamente";
             response.Data = newEmployee;
 
+            await _logRepository.AddLogAsync(new SystemLog
+            {
+                Action = "Register",
+                Email = dto.Email,
+                Details = "Usuario registrado exitosamente con profesión: " + (professionIdToSave != null ? "SI" : "NO"),
+                CreatedAt = DateTime.UtcNow
+            });
+
+            response.Status = true;
+
             return response;
         }
 
@@ -121,6 +133,18 @@ namespace fenixjobs_api.Application.Services
             response.Data = CreateToken(user);
             response.Status = true;
             response.Message = "Login exitoso.";
+
+            var token = CreateToken(user);
+
+            await _logRepository.AddLogAsync(new SystemLog
+            {
+                Action = "Login",
+                Email = dto.Email,
+                Details = "Inicio de sesión exitoso",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            response.Data = token;
 
             return response;
         }
